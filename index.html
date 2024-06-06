@@ -1,188 +1,144 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
+    <title>Document</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <style>
+      .container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
 
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width">
-  <title>물 마시기 인증</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-  <style>
-    body,
-    html {
-      height: 100%;
-      margin: 0;
-    }
+      #webcam-container {
+        margin-top: 250px;
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+      }
 
-    .container {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-    }
+      #webcam-container canvas {
+        max-width: 100%;
+        max-height: 100%;
+      }
 
-    .btn {
-      max-height: 75%;
-    }
+      #auth_msg {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+    </style>
+  </head>
 
-    #image-preview {
-      display: none;
-      max-width: 100%;
-      height: 0%;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    .certified-message {
-      color: red;
-      font-size: 1.5em;
-    }
-
-    .failure-message {
-      color: red;
-      margin-top: 10px;
-    }
-
-    .btn:active,
-    .btn:hover {
-      border: none !important;
-    }
-  </style>
-</head>
-
-<body onload="init()">
-  <div class="container">
-    <h1 class="fixed-top" id="title"></h1>
-
-    <input type="file" id="fileInput" class="d-none">
-    <div id="auth-container">
-
+  <body>
+    <div class="container">
+      <h1 class="text-center fixed-top" id="title"></h1>
       <div id="loding" class="spinner-border" role="status">
         <span class="visually-hidden">Loading...</span>
       </div>
-      <p id="certified-message" class="certified-message hidden">인증되었습니다</p>
-      <button type="button" id="auth-button" class="btn hidden" onclick="selectImage()">
-        <p class="auth_text">이미지 선택하기</p>
-        <img id="image-preview" src="#" alt="Image Preview" style="max-height: 400px;" class="mb-5 img-fulid">
-
-      </button>
-      <p id="failure-message" class="failure-message hidden">인증에 실패하였습니다.<br>이미지를 눌러 다시 인증하세요.</p>
+      <div id="webcam-container" class="d-none"></div>
+      <h3 class="text-center fw-bold d-none text-danger" id="auth_msg">
+        인증 되었습니다
+      </h3>
+      <div
+        type="button"
+        id="auth_btn"
+        class="btn btn-warning py-4 fixed-bottom"
+      >
+        미인증
+      </div>
     </div>
-    <div id="label-container" class="mt-3 d-none"></div>
-    <div id="authenticate-status" class="py-4 fixed-bottom btn btn-warning">미인증</div>
-  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
-    integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
-    crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
-    integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
-    crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
-  <script type="text/javascript">
-    const urlParams = new URLSearchParams(window.location.search);
-    const isAuth = urlParams.get('isAuth');
-    const modelType = urlParams.get('modelType')
-    const modelTitle = urlParams.get('modelTitle')
-    let userAuth = isAuth === null || isAuth === "false" ? false : true;
-    const URL = modelType === null ? "./morning/" : `./${modelType}/`;
-    let model, labelContainer, maxPredictions;
-    let predictionResult;
+    <script
+      src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+      integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
+      integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <script type="text/javascript">
+      const urlParams = new URLSearchParams(window.location.search);
+      const isAuth = urlParams.get("isAuth");
+      const modelType = urlParams.get("modelType");
+      const modelTitle = urlParams.get("modelTitle");
+      const URL = modelType === null ? "./morning/" : `./${modelType}/`;
 
+      let model, webcam, labelContainer, maxPredictions;
 
-    async function init() {
-      const modelURL = URL + "model.json";
-      const metadataURL = URL + "metadata.json";
-      model = await tmImage.load(modelURL, metadataURL);
-      maxPredictions = model.getTotalClasses();
-      labelContainer = document.getElementById("label-container");
-      for (let i = 0; i < maxPredictions; i++) {
-        labelContainer.appendChild(document.createElement("div"));
+      // Load the image model and setup the webcam
+      async function init() {
+        document.getElementById("title").textContent = modelTitle || "인증진행";
+
+        // If isAuth is true, directly show authentication completed message
+        if (isAuth === "true") {
+          document.getElementById("auth_btn").textContent = "인증완료";
+          document.getElementById("auth_msg").classList.remove("d-none");
+          document.getElementById("loding").classList.add("d-none");
+          return; // Stop further execution
+        }
+
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
+
+        model = await tmImage.load(modelURL, metadataURL);
+        maxPredictions = model.getTotalClasses();
+
+        const flip = false; // whether to flip the webcam
+        webcam = new tmImage.Webcam(500, 1000, flip); // width, height, flip
+        await webcam.setup({ facingMode: { exact: "environment" } }); // Use rear camera
+        await webcam.play();
+        window.requestAnimationFrame(loop);
+
+        document.getElementById("webcam-container").appendChild(webcam.canvas);
+        document.getElementById("webcam-container").classList.remove("d-none");
+        document.getElementById("loding").classList.add("d-none");
       }
-      modelTitle !== null ? title.textContent = modelTitle : 0
-      checkUserAuth();
-    }
 
-    function checkUserAuth() {
-      const authButton = document.getElementById('auth-button');
-      const certifiedMessage = document.getElementById('certified-message');
-      const authenticateStatus = document.getElementById('authenticate-status');
-      const failureMessage = document.getElementById('failure-message');
+      // Initialize webcam on page load
+      window.onload = init;
 
-      if (userAuth) {
-        authButton.classList.add('hidden');
-        certifiedMessage.classList.remove('hidden');
-        authenticateStatus.textContent = '인증완료';
-        loding.classList.add('hidden');
-        failureMessage.classList.add('hidden');
-      } else {
-        authButton.classList.remove('hidden');
-        certifiedMessage.classList.add('hidden');
-        loding.classList.add('hidden');
-        authenticateStatus.textContent = '미인증';
+      async function loop() {
+        webcam.update(); // update the webcam frame
+        await predict();
+        window.requestAnimationFrame(loop);
       }
-    }
 
-    function selectImage() {
-      document.getElementById('fileInput').click();
-    }
+      // run the webcam image through the image model
+      async function predict() {
+        const prediction = await model.predict(webcam.canvas);
 
-    document.getElementById('fileInput').addEventListener('change', handleImageUpload);
-
-    async function handleImageUpload(event) {
-      const file = event.target.files[0];
-      const reader = new FileReader();
-      reader.onload = async function (event) {
-        const image = new Image();
-        image.src = event.target.result;
-        image.onload = async function () {
-          document.getElementById('image-preview').style.display = 'block';
-          document.getElementById('image-preview').src = image.src;
-          document.querySelector('.auth_text').classList.add('d-none');
-          await predict(image);
-        };
-      };
-      reader.readAsDataURL(file);
-    }
-
-    async function predict(image) {
-      const prediction = await model.predict(image);
-      predictionResult = prediction[0].probability.toFixed(2) >= 0.5;
-      for (let i = 0; i < maxPredictions; i++) {
-        const classPrediction =
-          prediction[i].className + ": " + prediction[i].probability.toFixed(2);
-        labelContainer.childNodes[i].innerHTML = classPrediction;
+        if (prediction[0].probability.toFixed(2) > 0.5) {
+          webcam.stop(); // 웹캠 스트림 중지
+          webcam.canvas.classList.add("d-none"); // 웹캠 캔버스 숨기기
+          document.getElementById("auth_btn").textContent = "인증완료";
+          document.getElementById("auth_msg").classList.remove("d-none");
+          window.ReactNativeWebView.postMessage("true");
+        } else {
+          window.ReactNativeWebView.postMessage("false");
+        }
       }
-      updateAuthenticateStatus();
-    }
-
-    function updateAuthenticateStatus() {
-      const authenticateStatus = document.getElementById('authenticate-status');
-      const failureMessage = document.getElementById('failure-message');
-      if (predictionResult) {
-        // authenticateStatus.textContent = '인증완료';
-        // userAuth = true;
-        // checkUserAuth();
-        sendMessageToExpo({authenticated: true});
-      } else {
-        // authenticateStatus.textContent = '미인증';
-        // failureMessage.classList.remove('hidden');
-        sendMessageToExpo({authenticated: false});
-      }
-    }
-
-    function sendMessageToExpo(message) {
-      if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
-        window.ReactNativeWebView.postMessage(JSON.stringify(message));
-      }
-    }
-
-  </script>
-</body>
-
+    </script>
+  </body>
 </html>
