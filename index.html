@@ -86,20 +86,21 @@
       const isAuth = urlParams.get("isAuth");
       const modelType = urlParams.get("modelType");
       const modelTitle = urlParams.get("modelTitle");
-      const URL = modelType === null ? "./morning/" : `./${modelType}/`;
+      // const URL = modelType === null ? "./morning/" : `./${modelType}/`;
+      const URL = "./water";
 
       let model, webcam, labelContainer, maxPredictions;
 
-      // Load the image model and setup the webcam
+      // 웹캠을 로드한다.
       async function init() {
         document.getElementById("title").textContent = modelTitle || "인증진행";
 
-        // If isAuth is true, directly show authentication completed message
+        //인증 완료가 이미 되어있을 때는 카메라를 끄고 인증완료라는 문구를 띄운다.
         if (isAuth === "true") {
           document.getElementById("auth_btn").textContent = "인증완료";
           document.getElementById("auth_msg").classList.remove("d-none");
           document.getElementById("loding").classList.add("d-none");
-          return; // Stop further execution
+          return;
         }
 
         const modelURL = URL + "model.json";
